@@ -6,18 +6,47 @@ const Signup = () => {
   const [rememberLogin, setRememberLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { user, signUp } = UserAuth();
-
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [generalError, setGeneralError] = useState("");
+  
+  const { signUp } = UserAuth();
   const navigate = useNavigate();
+
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+
+    setEmailError("");
+    setPasswordError("");
+    setGeneralError("");
+
+    if (!validateEmail(email)) {
+      setEmailError("Please enter a valid email address");
+      return;
+    }
+
+    if (password.length < 6) {
+      setPasswordError("Password must be at least 6 characters long");
+      return;
+    }
 
     try {
       await signUp(email, password);
       navigate("/");
     } catch (err) {
-      console.log(err);
+      if (err.code === 'auth/email-already-in-use') {
+        
+        setGeneralError("Email is already in use. Please use a different email.");
+        alert("Email is already in use. Please use a different email.");
+      } else {
+        setGeneralError("An error occurred. Please try again.");
+        alert("An error occurred. Please try again.");
+      }
     }
   };
 
@@ -27,7 +56,7 @@ const Signup = () => {
         <img
           className="hidden sm:block absolute w-full h-full object-cover"
           src="https://assets.nflxext.com/ffe/siteui/vlv3/21a8ba09-4a61-44f8-8e2e-70e949c00c6f/6678e2ea-85e8-4db2-b440-c36547313109/IN-en-20240722-POP_SIGNUP_TWO_WEEKS-perspective_WEB_3457a8b1-284d-4bb5-979e-2a2e9bb342b3_large.jpg"
-          alt="///"
+          alt="Background"
         />
 
         <div className="bg-black/70 fixed top-0 left-0 w-full h-screen" />
@@ -44,19 +73,30 @@ const Signup = () => {
                 <input
                   className="p-3 my-2 bg-gray-700 rounded"
                   type="email"
-                  placeholder="email"
+                  placeholder="Email"
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
+                {emailError && (
+                  <p className="text-red-600">{emailError}</p>
+                )}
+
                 <input
                   className="p-3 my-2 bg-gray-700 rounded"
                   type="password"
-                  placeholder="password"
+                  placeholder="Password"
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                {passwordError && (
+                  <p className="text-red-600">{passwordError}</p>
+                )}
+
+                {generalError && (
+                  <p className="text-red-600">{generalError}</p>
+                )}
 
                 <button className="bg-red-600 py-3 my-6 rounded font-nsans-bold">
                   Sign Up
@@ -67,7 +107,7 @@ const Signup = () => {
                       type="checkbox"
                       className="mr-2"
                       checked={rememberLogin}
-                      onChange={(e) => setRememberLogin(!rememberLogin)}
+                      onChange={() => setRememberLogin(!rememberLogin)}
                     />
                     Remember me
                   </p>
